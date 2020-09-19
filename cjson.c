@@ -188,7 +188,7 @@ decode_string(JSONData *jsondata)
 
                 if (object) {
                     tmpObject = object;
-                    object = PyUnicode_DecodeUnicodeEscape(PyString_AS_STRING(tmpObject), PyString_Size(tmpObject), NULL);
+                    object = PyUnicode_DecodeUnicodeEscape(PyBytes_AS_STRING(tmpObject), PyBytes_Size(tmpObject), NULL);
                     Py_XDECREF(tmpObject);
                 }
             }
@@ -203,9 +203,9 @@ decode_string(JSONData *jsondata)
         }
     }
     else if (string_escape)
-        object = PyString_DecodeEscape(jsondata->ptr+1, len, NULL, 0, NULL);
+        object = PyBytes_DecodeEscape(jsondata->ptr+1, len, NULL, 0, NULL);
     else
-        object = PyString_FromStringAndSize(jsondata->ptr+1, len);
+        object = PyBytes_FromStringAndSize(jsondata->ptr+1, len);
 
     if (object == NULL) {
         PyObject *type, *value, *tb, *reason;
@@ -221,7 +221,7 @@ decode_string(JSONData *jsondata)
                 PyErr_Format(JSON_DecodeError, "cannot decode string starting"
                              " at position " SSIZE_T_F ": %s",
                              (Py_ssize_t)(jsondata->ptr - jsondata->str),
-                             reason ? PyString_AsString(reason) : "bad format");
+                             reason ? PyBytes_AsString(reason) : "bad format");
                 Py_XDECREF(reason);
             } else {
                 PyErr_Format(JSON_DecodeError,
@@ -331,14 +331,14 @@ decode_number(JSONData *jsondata)
        skipDigits(ptr);
     }
 
-    str = PyString_FromStringAndSize(jsondata->ptr, ptr - jsondata->ptr);
+    str = PyBytes_FromStringAndSize(jsondata->ptr, ptr - jsondata->ptr);
     if (str == NULL)
         return NULL;
 
     if (is_float)
         object = PyFloat_FromString(str);
     else
-        object = PyInt_FromString(PyString_AS_STRING(str), NULL, 10);
+        object = PyInt_FromString(PyBytes_AS_STRING(str), NULL, 10);
 
     Py_DECREF(str);
 
@@ -619,7 +619,7 @@ decode_json(JSONData *jsondata)
 /* ------------------------------ Encoding ----------------------------- */
 
 /*
- * This function is an almost verbatim copy of PyString_Repr() from
+ * This function is an almost verbatim copy of PyBytes_Repr() from
  * Python's stringobject.c with the following differences:
  *
  * - it always quotes the output using double quotes.
@@ -638,7 +638,7 @@ encode_string(PyObject *string)
                         "string is too large to make repr");
         return NULL;
     }
-    v = PyString_FromStringAndSize((char *)NULL, newsize);
+    v = PyBytes_FromStringAndSize((char *)NULL, newsize);
     if (v == NULL) {
         return NULL;
     }
@@ -650,12 +650,12 @@ encode_string(PyObject *string)
 
         quote = '"';
 
-        p = PyString_AS_STRING(v);
+        p = PyBytes_AS_STRING(v);
         *p++ = quote;
         for (i = 0; i < op->ob_size; i++) {
             /* There's at least enough room for a hex escape
              and a closing quote. */
-            assert(newsize - (p - PyString_AS_STRING(v)) >= 7);
+            assert(newsize - (p - PyBytes_AS_STRING(v)) >= 7);
             c = op->ob_sval[i];
             if (c == quote || c == '\\')
                 *p++ = '\\', *p++ = c;
@@ -679,10 +679,10 @@ encode_string(PyObject *string)
             else
                 *p++ = c;
         }
-        assert(newsize - (p - PyString_AS_STRING(v)) >= 1);
+        assert(newsize - (p - PyBytes_AS_STRING(v)) >= 1);
         *p++ = quote;
         *p = '\0';
-        _PyString_Resize(&v, (int) (p - PyString_AS_STRING(v)));
+        _PyBytes_Resize(&v, (int) (p - PyBytes_AS_STRING(v)));
         return v;
     }
 }
@@ -733,11 +733,11 @@ encode_unicode(PyObject *unicode)
         return NULL;
     }
 
-    repr = PyString_FromStringAndSize(NULL, 2 + expandsize*size + 1);
+    repr = PyBytes_FromStringAndSize(NULL, 2 + expandsize*size + 1);
     if (repr == NULL)
         return NULL;
 
-    p = PyString_AS_STRING(repr);
+    p = PyBytes_AS_STRING(repr);
 
     *p++ = '"';
 
@@ -745,7 +745,7 @@ encode_unicode(PyObject *unicode)
         Py_UNICODE ch = *s++;
 
         /* Escape quotes */
-        if ((ch == (Py_UNICODE) PyString_AS_STRING(repr)[0] || ch == '\\')) {
+        if ((ch == (Py_UNICODE) PyBytes_AS_STRING(repr)[0] || ch == '\\')) {
             *p++ = '\\';
             *p++ = (char) ch;
             continue;
@@ -821,10 +821,10 @@ encode_unicode(PyObject *unicode)
             *p++ = (char) ch;
     }
 
-    *p++ = PyString_AS_STRING(repr)[0];
+    *p++ = PyBytes_AS_STRING(repr)[0];
 
     *p = '\0';
-    _PyString_Resize(&repr, p - PyString_AS_STRING(repr));
+    _PyBytes_Resize(&repr, p - PyBytes_AS_STRING(repr));
     return repr;
 }
 
@@ -847,7 +847,7 @@ encode_tuple(PyObject *tuple)
 
     n = v->ob_size;
     if (n == 0)
-        return PyString_FromString("[]");
+        return PyBytes_FromString("[]");
 
     pieces = PyTuple_New(n);
     if (pieces == NULL)
@@ -863,29 +863,29 @@ encode_tuple(PyObject *tuple)
 
     /* Add "[]" decorations to the first and last items. */
     assert(n > 0);
-    s = PyString_FromString("[");
+    s = PyBytes_FromString("[");
     if (s == NULL)
         goto Done;
     temp = PyTuple_GET_ITEM(pieces, 0);
-    PyString_ConcatAndDel(&s, temp);
+    PyBytes_ConcatAndDel(&s, temp);
     PyTuple_SET_ITEM(pieces, 0, s);
     if (s == NULL)
         goto Done;
 
-    s = PyString_FromString("]");
+    s = PyBytes_FromString("]");
     if (s == NULL)
         goto Done;
     temp = PyTuple_GET_ITEM(pieces, n-1);
-    PyString_ConcatAndDel(&temp, s);
+    PyBytes_ConcatAndDel(&temp, s);
     PyTuple_SET_ITEM(pieces, n-1, temp);
     if (temp == NULL)
         goto Done;
 
     /* Paste them all together with ", " between. */
-    s = PyString_FromString(", ");
+    s = PyBytes_FromString(", ");
     if (s == NULL)
         goto Done;
-    result = _PyString_Join(s, pieces);
+    result = _PyBytes_Join(s, pieces);
     Py_DECREF(s);
 
 Done:
@@ -920,7 +920,7 @@ encode_list(PyObject *list)
     }
 
     if (v->ob_size == 0) {
-        result = PyString_FromString("[]");
+        result = PyBytes_FromString("[]");
         goto Done;
     }
 
@@ -943,29 +943,29 @@ encode_list(PyObject *list)
 
     /* Add "[]" decorations to the first and last items. */
     assert(PyList_GET_SIZE(pieces) > 0);
-    s = PyString_FromString("[");
+    s = PyBytes_FromString("[");
     if (s == NULL)
         goto Done;
     temp = PyList_GET_ITEM(pieces, 0);
-    PyString_ConcatAndDel(&s, temp);
+    PyBytes_ConcatAndDel(&s, temp);
     PyList_SET_ITEM(pieces, 0, s);
     if (s == NULL)
         goto Done;
 
-    s = PyString_FromString("]");
+    s = PyBytes_FromString("]");
     if (s == NULL)
         goto Done;
     temp = PyList_GET_ITEM(pieces, PyList_GET_SIZE(pieces) - 1);
-    PyString_ConcatAndDel(&temp, s);
+    PyBytes_ConcatAndDel(&temp, s);
     PyList_SET_ITEM(pieces, PyList_GET_SIZE(pieces) - 1, temp);
     if (temp == NULL)
         goto Done;
 
     /* Paste them all together with ", " between. */
-    s = PyString_FromString(", ");
+    s = PyBytes_FromString(", ");
     if (s == NULL)
         goto Done;
-    result = _PyString_Join(s, pieces);
+    result = _PyBytes_Join(s, pieces);
     Py_DECREF(s);
 
 Done:
@@ -1004,7 +1004,7 @@ encode_dict(PyObject *dict)
     }
 
     if (mp->ma_used == 0) {
-        result = PyString_FromString("{}");
+        result = PyBytes_FromString("{}");
         goto Done;
     }
 
@@ -1012,7 +1012,7 @@ encode_dict(PyObject *dict)
     if (pieces == NULL)
         goto Done;
 
-    colon = PyString_FromString(": ");
+    colon = PyBytes_FromString(": ");
     if (colon == NULL)
         goto Done;
 
@@ -1022,7 +1022,7 @@ encode_dict(PyObject *dict)
     while (PyDict_Next((PyObject *)mp, &i, &key, &value)) {
         int status;
 
-        if (!PyString_Check(key) && !PyUnicode_Check(key)) {
+        if (!PyBytes_Check(key) && !PyUnicode_Check(key)) {
             PyErr_SetString(JSON_EncodeError, "JSON encodable dictionaries "
                             "must have string/unicode keys");
             goto Done;
@@ -1031,8 +1031,8 @@ encode_dict(PyObject *dict)
         /* Prevent repr from deleting value during key format. */
         Py_INCREF(value);
         s = encode_object(key);
-        PyString_Concat(&s, colon);
-        PyString_ConcatAndDel(&s, encode_object(value));
+        PyBytes_Concat(&s, colon);
+        PyBytes_ConcatAndDel(&s, encode_object(value));
         Py_DECREF(value);
         if (s == NULL)
             goto Done;
@@ -1044,29 +1044,29 @@ encode_dict(PyObject *dict)
 
     /* Add "{}" decorations to the first and last items. */
     assert(PyList_GET_SIZE(pieces) > 0);
-    s = PyString_FromString("{");
+    s = PyBytes_FromString("{");
     if (s == NULL)
         goto Done;
     temp = PyList_GET_ITEM(pieces, 0);
-    PyString_ConcatAndDel(&s, temp);
+    PyBytes_ConcatAndDel(&s, temp);
     PyList_SET_ITEM(pieces, 0, s);
     if (s == NULL)
         goto Done;
 
-    s = PyString_FromString("}");
+    s = PyBytes_FromString("}");
     if (s == NULL)
         goto Done;
     temp = PyList_GET_ITEM(pieces, PyList_GET_SIZE(pieces) - 1);
-    PyString_ConcatAndDel(&temp, s);
+    PyBytes_ConcatAndDel(&temp, s);
     PyList_SET_ITEM(pieces, PyList_GET_SIZE(pieces) - 1, temp);
     if (temp == NULL)
         goto Done;
 
     /* Paste them all together with ", " between. */
-    s = PyString_FromString(", ");
+    s = PyBytes_FromString(", ");
     if (s == NULL)
         goto Done;
-    result = _PyString_Join(s, pieces);
+    result = _PyBytes_Join(s, pieces);
     Py_DECREF(s);
 
 Done:
@@ -1081,24 +1081,24 @@ static PyObject*
 encode_object(PyObject *object)
 {
     if (object == Py_True) {
-        return PyString_FromString("true");
+        return PyBytes_FromString("true");
     } else if (object == Py_False) {
-        return PyString_FromString("false");
+        return PyBytes_FromString("false");
     } else if (object == Py_None) {
-        return PyString_FromString("null");
-    } else if (PyString_Check(object)) {
+        return PyBytes_FromString("null");
+    } else if (PyBytes_Check(object)) {
         return encode_string(object);
     } else if (PyUnicode_Check(object)) {
         return encode_unicode(object);
     } else if (PyFloat_Check(object)) {
         double val = PyFloat_AS_DOUBLE(object);
         if (Py_IS_NAN(val)) {
-            return PyString_FromString("NaN");
+            return PyBytes_FromString("NaN");
         } else if (Py_IS_INFINITY(val)) {
             if (val > 0) {
-                return PyString_FromString("Infinity");
+                return PyBytes_FromString("Infinity");
             } else {
-                return PyString_FromString("-Infinity");
+                return PyBytes_FromString("-Infinity");
             }
         } else {
             return PyObject_Repr(object);
@@ -1168,13 +1168,13 @@ JSON_decode(PyObject *self, PyObject *args, PyObject *kwargs)
         jsondata.source_unicode = False;
     }
 
-    if (PyString_AsStringAndSize(str, &(jsondata.str), NULL) == -1) {
+    if (PyBytes_AsStringAndSize(str, &(jsondata.str), NULL) == -1) {
         Py_DECREF(str);
         return NULL; // not a string object or it contains null bytes
     }
 
     jsondata.ptr = jsondata.str;
-    jsondata.end = jsondata.str + PyString_GET_SIZE(str);
+    jsondata.end = jsondata.str + PyBytes_GET_SIZE(str);
     jsondata.all_unicode = all_unicode;
 
     object = decode_json(&jsondata);
