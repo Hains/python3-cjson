@@ -630,10 +630,10 @@ static PyObject*
 encode_string(PyObject *string)
 {
     register PyBytesObject* op = (PyBytesObject*) string;
-    size_t newsize = 2 + 6 * op->ob_size;
+    size_t newsize = 2 + 6 * Py_SIZE(op);
     PyObject *v;
 
-    if (op->ob_size > (PY_SSIZE_T_MAX-2)/6) {
+    if (Py_SIZE(op) > (PY_SSIZE_T_MAX-2)/6) {
         PyErr_SetString(PyExc_OverflowError,
                         "string is too large to make repr");
         return NULL;
@@ -652,7 +652,7 @@ encode_string(PyObject *string)
 
         p = PyBytes_AS_STRING(v);
         *p++ = quote;
-        for (i = 0; i < op->ob_size; i++) {
+        for (i = 0; i < Py_SIZE(op); i++) {
             /* There's at least enough room for a hex escape
              and a closing quote. */
             assert(newsize - (p - PyBytes_AS_STRING(v)) >= 7);
@@ -845,7 +845,7 @@ encode_tuple(PyObject *tuple)
     PyObject *pieces, *result = NULL;
     PyTupleObject *v = (PyTupleObject*) tuple;
 
-    n = v->ob_size;
+    n = Py_SIZE(v);
     if (n == 0)
         return PyBytes_FromString("[]");
 
@@ -919,7 +919,7 @@ encode_list(PyObject *list)
         return NULL;
     }
 
-    if (v->ob_size == 0) {
+    if (Py_SIZE(v) == 0) {
         result = PyBytes_FromString("[]");
         goto Done;
     }
@@ -930,7 +930,7 @@ encode_list(PyObject *list)
 
     /* Do repr() on each element.  Note that this may mutate the list,
      * so must refetch the list size on each iteration. */
-    for (i = 0; i < v->ob_size; ++i) {
+    for (i = 0; i < Py_SIZE(v); ++i) {
         int status;
         s = encode_object(v->ob_item[i]);
         if (s == NULL)
