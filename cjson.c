@@ -629,7 +629,7 @@ decode_json(JSONData *jsondata)
 static PyObject*
 encode_string(PyObject *string)
 {
-    register PyStringObject* op = (PyStringObject*) string;
+    register PyBytesObject* op = (PyBytesObject*) string;
     size_t newsize = 2 + 6 * op->ob_size;
     PyObject *v;
 
