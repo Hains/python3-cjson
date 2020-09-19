@@ -1220,12 +1220,23 @@ PyDoc_STRVAR(module_doc,
 
 /* Initialization function for the module (*must* be called initcjson) */
 
-PyMODINIT_FUNC
-inite2icjson(void)
+static struct PyModuleDef moduledef = {
+	PyModuleDef_HEAD_INIT,
+	"e2icjson",          /* m_name */
+	"e2icjson",          /* m_doc */
+	-1,                  /* m_size */
+	cjson_methods,       /* m_methods */
+	NULL,                /* m_reload */
+	NULL,                /* m_traverse */
+	NULL,                /* m_clear */
+	NULL,                /* m_free */
+};
+
+PyMODINIT_FUNC PyInit_e2icjson(void)
 {
     PyObject *m;
 
-    m = Py_InitModule3("e2icjson", cjson_methods, module_doc);
+    m = PyModule_Create(&moduledef);
 
     if (m == NULL)
         return;
