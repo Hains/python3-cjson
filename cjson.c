@@ -1239,29 +1239,30 @@ PyMODINIT_FUNC PyInit_e2icjson(void)
     m = PyModule_Create(&moduledef);
 
     if (m == NULL)
-        return;
+        return m;
 
     JSON_Error = PyErr_NewException("e2icjson.Error", NULL, NULL);
     if (JSON_Error == NULL)
-        return;
+        return m;
     Py_INCREF(JSON_Error);
     PyModule_AddObject(m, "Error", JSON_Error);
 
     JSON_EncodeError = PyErr_NewException("e2icjson.EncodeError", JSON_Error, NULL);
     if (JSON_EncodeError == NULL)
-        return;
+        return m;
     Py_INCREF(JSON_EncodeError);
     PyModule_AddObject(m, "EncodeError", JSON_EncodeError);
 
     JSON_DecodeError = PyErr_NewException("e2icjson.DecodeError", JSON_Error, NULL);
     if (JSON_DecodeError == NULL)
-        return;
+        return m;
     Py_INCREF(JSON_DecodeError);
     PyModule_AddObject(m, "DecodeError", JSON_DecodeError);
 
     // Module version (the MODULE_VERSION macro is defined by setup.py)
     PyModule_AddStringConstant(m, "__version__", string(MODULE_VERSION));
 
+    return m;
 }
 
 
