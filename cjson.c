@@ -338,7 +338,7 @@ decode_number(JSONData *jsondata)
     if (is_float)
         object = PyFloat_FromString(str);
     else
-        object = PyInt_FromString(PyBytes_AS_STRING(str), NULL, 10);
+        object = PyLong_FromString(PyBytes_AS_STRING(str), NULL, 10);
 
     Py_DECREF(str);
 
