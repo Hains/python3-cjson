@@ -723,7 +723,7 @@ encode_unicode(PyObject *unicode)
        escape.
     */
 
-    size = PyUnicode_GET_SIZE(unicode);
+    size = PyUnicode_GET_LENGTH(unicode);
 
     if (size > (PY_SSIZE_T_MAX-2-1)/expandsize) {
         PyErr_SetString(PyExc_OverflowError,
