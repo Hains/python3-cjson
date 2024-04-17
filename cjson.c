@@ -699,7 +699,6 @@ static PyObject*
 encode_unicode(PyObject *unicode)
 {
     PyObject *repr;
-    Py_UNICODE *s;
     Py_ssize_t size;
     char *p;
 
@@ -724,7 +723,6 @@ encode_unicode(PyObject *unicode)
        escape.
     */
 
-    s = PyUnicode_AS_UNICODE(unicode);
     size = PyUnicode_GET_SIZE(unicode);
 
     if (size > (PY_SSIZE_T_MAX-2-1)/expandsize) {
@@ -741,8 +739,9 @@ encode_unicode(PyObject *unicode)
 
     *p++ = '"';
 
+    int i = 0;
     while (size-- > 0) {
-        Py_UNICODE ch = *s++;
+        Py_UNICODE ch = (long int) PyUnicode_ReadChar(unicode, i++);
 
         /* Escape quotes */
         if ((ch == (Py_UNICODE) PyBytes_AS_STRING(repr)[0] || ch == '\\')) {
