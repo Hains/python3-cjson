@@ -1103,7 +1103,7 @@ encode_object(PyObject *object)
         } else {
             return PyObject_Repr(object);
         }
-    } else if (PyInt_Check(object) || PyLong_Check(object)) {
+    } else if (PyLong_Check(object)) {
         return PyObject_Str(object);
     } else if (PyList_Check(object)) {
         PyObject *result;
